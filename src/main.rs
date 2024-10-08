@@ -21,9 +21,10 @@ async fn main() {
         .route("/items", post(api::create_item))
         .route("/items/:id", put(api::update_item))
         .route("/items", get(api::get_items))
+        .route("/products", get(api::get_products))
         .layer(Extension(pool));
 
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+    let addr = SocketAddr::from(([0, 0, 0, 0], 3000));
     println!("Listening on {}", addr);
     axum::Server::bind(&addr)
         .serve(app.into_make_service())

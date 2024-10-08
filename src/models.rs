@@ -18,3 +18,16 @@ pub struct NewItem {
 pub struct UpdateItem {
     pub name: String,
 }
+
+
+
+
+#[derive(Deserialize, Serialize, Debug, FromRow)]
+
+pub struct Product{
+    pub id: i32,
+    pub title: String,
+    pub price: f64,
+    pub image_url: String,
+    pub brandname: String,
+}

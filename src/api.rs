@@ -1,13 +1,26 @@
 // api.rs
 
+
 use axum::{
     extract::{Extension, Path},
     http::StatusCode,
     routing::{get, post, put},
     Json,
 };
-use sqlx::Pool;
-use crate::models::{Item, NewItem, UpdateItem};
+use sqlx::{Execute, Pool};
+use crate::models::{Item, NewItem, UpdateItem, Product};
+
+pub async  fn get_products(
+    Extension(pool): Extension<Pool<sqlx::Sqlite>>) -> Json<Vec<Product>> {
+    let products = sqlx::query_as::<_, Product>("SELECT id, title, price, image_url, brandname FROM products")
+    .fetch_all(&pool)
+    .await
+    .expect("Failed to fetch products");
+    
+
+    Json(products)
+
+}
 
 pub async fn get_items(Extension(pool): Extension<Pool<sqlx::Sqlite>>) -> Json<Vec<Item>> {
     let items = sqlx::query_as::<_, Item>("SELECT id, name FROM items")
