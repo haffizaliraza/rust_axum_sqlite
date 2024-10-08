@@ -7,7 +7,7 @@ use axum::{
     routing::{get, post, put},
     Json,
 };
-use sqlx::{Execute, Pool};
+use sqlx::{Execute, Pool, Sqlite};
 use crate::models::{Item, NewItem, UpdateItem, Product};
 
 pub async  fn get_products(
@@ -18,7 +18,19 @@ pub async  fn get_products(
     .expect("Failed to fetch products");
     
     Json(products)
+}
 
+pub async fn get_product(
+    Path(id): Path<i32>,
+    Extension(pool): Extension<Pool<Sqlite>>,
+) -> Result<Json<Product>, (StatusCode, String)> {
+    let product = sqlx::query_as::<_, Product>("SELECT * FROM products WHERE id = ?")
+        .bind(id)
+        .fetch_one(&pool) 
+        .await
+        .map_err(|_| (StatusCode::NOT_FOUND, "Product not found".to_string()))?;
+
+    Ok(Json(product)) // Wrap product in Json and return
 }
 
 pub async fn get_items(Extension(pool): Extension<Pool<sqlx::Sqlite>>) -> Json<Vec<Item>> {
