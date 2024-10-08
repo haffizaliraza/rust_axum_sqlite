@@ -17,7 +17,6 @@ pub async  fn get_products(
     .await
     .expect("Failed to fetch products");
     
-
     Json(products)
 
 }
