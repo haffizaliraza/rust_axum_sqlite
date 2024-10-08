@@ -1,6 +1,8 @@
 // api.rs
 
 
+use core::panic::PanicMessage;
+
 use axum::{
     extract::{Extension, Path},
     http::StatusCode,
@@ -8,7 +10,35 @@ use axum::{
     Json,
 };
 use sqlx::{Execute, Pool, Sqlite};
-use crate::models::{Item, NewItem, UpdateItem, Product};
+use crate::models::{Item, NewItem, UpdateItem, Product, SignupInput, User};
+
+use jsonwebtoken::{encode, decode, Header, Validation, EncodingKey, DecodingKey};
+use bcrypt::{hash, verify};
+
+const SECRET: &str = "ERSDTYUIJKNVDQR";
+
+pub async fn signup(
+    Extension(pool): Extension<Pool<Sqlite>>,
+    Json(user): Json<SignupInput>,
+) -> Result<(StatusCode, Json<String>), (StatusCode, String)> {
+   
+    let password_hash = hash(&user.password, 4).map_err(|e| {
+        (StatusCode::INTERNAL_SERVER_ERROR, format!("Hash error: {}", e))
+    })?;
+
+    let result = sqlx::query("INSERT INTO users (username, password_hash) VALUES (?, ?)")
+        .bind(&user.username)
+        .bind(&password_hash)
+        .execute(&pool)
+        .await;
+
+    match result {
+        Ok(_) => Ok((StatusCode::CREATED, Json("User created successfully".to_string()))),
+        Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, format!("Error creating user: {}", e))),
+    }
+}
+
+
 
 pub async fn get_products(
     Extension(pool): Extension<Pool<sqlx::Sqlite>>) -> Json<Vec<Product>> {

@@ -31,14 +31,17 @@ async fn main() {
 
 
     let app = Router::new()
-        .route("/items", post(api::create_item))
-        .route("/items/:id", put(api::update_item))
-        .route("/items", get(api::get_items))
-        .route("/products", get(api::get_products))
-        .route("/products/:id", get(api::get_product))
-        .route("/products/:id", delete(api::delete_product))
-        .layer(cors) // Apply the CORS layer here
-        .layer(Extension(pool));
+    .route("/api/signup", post(api::signup))
+    // .route("/api/login", post(api::login))
+    .route("/api/items", post(api::create_item))
+    .route("/api/items/:id", put(api::update_item))
+    .route("/api/items", get(api::get_items))
+    .route("/api/products", get(api::get_products))
+    .route("/api/products/:id", get(api::get_product))
+    .route("/api/products/:id", delete(api::delete_product))
+    .layer(cors)
+    .layer(Extension(pool));
+
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 3000));
     println!("Listening on {}", addr);

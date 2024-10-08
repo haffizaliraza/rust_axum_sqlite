@@ -31,3 +31,27 @@ pub struct Product{
     pub image_url: String,
     pub brandname: String,
 }
+
+#[derive(Deserialize, Serialize, Debug, FromRow)]
+pub struct User {
+    pub id: i32,
+    pub username: String,
+    pub password_hash: String,
+}
+
+#[derive(Deserialize)]
+pub struct SignupInput {
+    pub username: String,
+    pub password: String,
+}
+
+#[derive(Deserialize)]
+pub struct LoginInput {
+    pub username: String,
+    pub password: String,
+}
+
+#[derive(Serialize)]
+struct JwtResponse {
+    token: String,
+}
