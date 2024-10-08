@@ -1,10 +1,20 @@
-use serde::{Serialize, Deserialize};
+// models.rs
+
+use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 
-#[derive(Serialize, Deserialize, FromRow)]
-pub struct User {
+#[derive(Debug, Serialize, Deserialize, FromRow)] // Add FromRow here
+pub struct Item {
     pub id: i32,
-    pub username: String,
-    pub email: String,
-    pub password_hash: String
+    pub name: String,
+}
+
+#[derive(Deserialize)]
+pub struct NewItem {
+    pub name: String,
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct UpdateItem {
+    pub name: String,
 }
