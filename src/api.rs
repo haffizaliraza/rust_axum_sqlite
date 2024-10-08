@@ -10,7 +10,7 @@ use axum::{
 use sqlx::{Execute, Pool, Sqlite};
 use crate::models::{Item, NewItem, UpdateItem, Product};
 
-pub async  fn get_products(
+pub async fn get_products(
     Extension(pool): Extension<Pool<sqlx::Sqlite>>) -> Json<Vec<Product>> {
     let products = sqlx::query_as::<_, Product>("SELECT id, title, price, image_url, brandname FROM products")
     .fetch_all(&pool)
@@ -19,6 +19,26 @@ pub async  fn get_products(
     
     Json(products)
 }
+
+pub async fn delete_product(
+    Path(id): Path<i32>,
+    Extension(pool): Extension<Pool<Sqlite>>,
+) -> Result<(StatusCode, Json<String>), (StatusCode, String)> {
+    let rows_affected = sqlx::query("DELETE FROM products WHERE id = ?")
+        .bind(id)
+        .execute(&pool)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Error deleting product: {}", e)))?
+        .rows_affected();
+
+    if rows_affected == 0 {
+        Err((StatusCode::NOT_FOUND, "Product not found".to_string()))
+    } else {
+        Ok((StatusCode::OK, Json("Product deleted successfully".to_string())))
+    }
+}
+
+
 
 pub async fn get_product(
     Path(id): Path<i32>,
@@ -30,7 +50,7 @@ pub async fn get_product(
         .await
         .map_err(|_| (StatusCode::NOT_FOUND, "Product not found".to_string()))?;
 
-    Ok(Json(product)) // Wrap product in Json and return
+    Ok(Json(product))
 }
 
 pub async fn get_items(Extension(pool): Extension<Pool<sqlx::Sqlite>>) -> Json<Vec<Item>> {
