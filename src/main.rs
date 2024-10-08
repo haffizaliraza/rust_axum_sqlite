@@ -35,6 +35,7 @@ async fn main() {
         .route("/items/:id", put(api::update_item))
         .route("/items", get(api::get_items))
         .route("/products", get(api::get_products))
+        .route("/products/:id", get(api::get_product))
         .layer(cors) // Apply the CORS layer here
         .layer(Extension(pool));
 
