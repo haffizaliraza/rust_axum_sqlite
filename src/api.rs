@@ -10,7 +10,7 @@ use axum::{
     Json,
 };
 use sqlx::{Execute, Pool, Sqlite};
-use crate::models::{Item, NewItem, UpdateItem, Product, SignupInput, User};
+use crate::models::{Item, NewItem, UpdateItem, Product, SignupInput, User, JwtResponse, LoginInput};
 
 use jsonwebtoken::{encode, decode, Header, Validation, EncodingKey, DecodingKey};
 use bcrypt::{hash, verify};
@@ -38,6 +38,29 @@ pub async fn signup(
     }
 }
 
+
+pub async fn login(
+    Extension(pool): Extension<Pool<Sqlite>>,
+    Json(input): Json<LoginInput>,
+) -> Result<(StatusCode, Json<JwtResponse>), (StatusCode, String)> {
+    let user = sqlx::query_as::<_, User>("SELECT * FROM users WHERE username = ?")
+        .bind(&input.username)
+        .fetch_one(&pool)
+        .await
+        .map_err(|_| (StatusCode::UNAUTHORIZED, "Invalid username or password".to_string()))?;
+
+    if verify(&input.password, &user.password_hash).map_err(|e| {
+        (StatusCode::INTERNAL_SERVER_ERROR, format!("Verification error: {}", e))
+    })? {
+        let claims = user.id; // You may include more claims as needed
+        let token = encode(&Header::default(), &claims, &EncodingKey::from_secret(SECRET.as_ref()))
+            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Token creation error: {}", e)))?;
+
+        Ok((StatusCode::OK, Json(JwtResponse { token })))
+    } else {
+        Err((StatusCode::UNAUTHORIZED, "Invalid username or password".to_string()))
+    }
+}
 
 
 pub async fn get_products(

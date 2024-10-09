@@ -52,6 +52,6 @@ pub struct LoginInput {
 }
 
 #[derive(Serialize)]
-struct JwtResponse {
-    token: String,
+pub struct JwtResponse {
+    pub token: String,
 }

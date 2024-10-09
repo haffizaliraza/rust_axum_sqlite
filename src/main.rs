@@ -32,7 +32,7 @@ async fn main() {
 
     let app = Router::new()
     .route("/api/signup", post(api::signup))
-    // .route("/api/login", post(api::login))
+    .route("/api/login", post(api::login))
     .route("/api/items", post(api::create_item))
     .route("/api/items/:id", put(api::update_item))
     .route("/api/items", get(api::get_items))
