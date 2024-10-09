@@ -10,7 +10,8 @@ use axum::{
     Json,
 };
 use sqlx::{Execute, Pool, Sqlite};
-use crate::models::{Item, NewItem, UpdateItem, Product, SignupInput, User, JwtResponse, LoginInput};
+use crate::models::{Item, NewItem, UpdateItem, Product, SignupInput, User, JwtResponse, LoginInput, Claims};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use jsonwebtoken::{encode, decode, Header, Validation, EncodingKey, DecodingKey};
 use bcrypt::{hash, verify};
@@ -52,7 +53,16 @@ pub async fn login(
     if verify(&input.password, &user.password_hash).map_err(|e| {
         (StatusCode::INTERNAL_SERVER_ERROR, format!("Verification error: {}", e))
     })? {
-        let claims = user.id; // You may include more claims as needed
+        let current_time = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("Time went backwards")
+            .as_secs() as usize;
+        let expiration_time = current_time + 10000; 
+
+        let claims = Claims {
+            sub: user.id.to_string(),
+            exp: expiration_time,
+        };
         let token = encode(&Header::default(), &claims, &EncodingKey::from_secret(SECRET.as_ref()))
             .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Token creation error: {}", e)))?;
 

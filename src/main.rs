@@ -10,6 +10,7 @@ use dotenv::dotenv;
 mod db;
 mod models;
 mod api;
+mod middleware; 
 
 use tower_http::cors::{CorsLayer, Any};
 
@@ -30,17 +31,25 @@ async fn main() {
         .allow_headers(Any);
 
 
-    let app = Router::new()
+    let public_routes = Router::new()
     .route("/api/signup", post(api::signup))
-    .route("/api/login", post(api::login))
-    .route("/api/items", post(api::create_item))
-    .route("/api/items/:id", put(api::update_item))
-    .route("/api/items", get(api::get_items))
-    .route("/api/products", get(api::get_products))
-    .route("/api/products/:id", get(api::get_product))
-    .route("/api/products/:id", delete(api::delete_product))
-    .layer(cors)
-    .layer(Extension(pool));
+    .route("/api/login", post(api::login));
+
+    let protected_routes = Router::new()
+        .route("/api/items", post(api::create_item))
+        .route("/api/items/:id", put(api::update_item))
+        .route("/api/items", get(api::get_items))
+        .route("/api/products", get(api::get_products))
+        .route("/api/products/:id", get(api::get_product))
+        .route("/api/products/:id", delete(api::delete_product))
+        .layer(axum::middleware::from_fn(middleware::validate_jwt));
+
+    let app = public_routes
+        .merge(protected_routes)
+        .layer(cors)
+        .layer(Extension(pool));
+
+
 
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 3000));

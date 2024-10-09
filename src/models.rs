@@ -20,7 +20,11 @@ pub struct UpdateItem {
 }
 
 
-
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Claims {
+    pub sub: String,
+    pub exp: usize,
+}
 
 #[derive(Deserialize, Serialize, Debug, FromRow)]
 
