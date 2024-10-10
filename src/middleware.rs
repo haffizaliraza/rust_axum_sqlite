@@ -1,4 +1,3 @@
-// src/middleware.rs
 use axum::{
     http::{Request, StatusCode},
     middleware::Next,
@@ -31,6 +30,6 @@ pub async fn validate_jwt<B>(req: Request<B>, next: Next<B>) -> Result<Response,
         }
     }
 
-    Err((StatusCode::UNAUTHORIZED))
+    Err(StatusCode::UNAUTHORIZED)
     
 }

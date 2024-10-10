@@ -1,19 +1,17 @@
 // api.rs
 
 
-use core::panic::PanicMessage;
 
 use axum::{
     extract::{Extension, Path},
     http::StatusCode,
-    routing::{get, post, put},
     Json,
 };
-use sqlx::{Execute, Pool, Sqlite};
+use sqlx::{Pool, Sqlite};
 use crate::models::{Item, NewItem, UpdateItem, Product, SignupInput, User, JwtResponse, LoginInput, Claims};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use jsonwebtoken::{encode, decode, Header, Validation, EncodingKey, DecodingKey};
+use jsonwebtoken::{encode, Header, EncodingKey};
 use bcrypt::{hash, verify};
 
 const SECRET: &str = "ERSDTYUIJKNVDQR";
