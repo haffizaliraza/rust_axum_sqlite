@@ -8,7 +8,7 @@ use axum::{
     Json,
 };
 use sqlx::{Pool, Sqlite};
-use crate::models::{Item, NewItem, UpdateItem, Product, SignupInput, User, JwtResponse, LoginInput, Claims};
+use crate::models::{Item, NewItem, UpdateItem, Product, SignupInput, User, JwtResponse, LoginInput, Claims, NewProduct};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use jsonwebtoken::{encode, Header, EncodingKey};
@@ -71,9 +71,27 @@ pub async fn login(
 }
 
 
+pub async fn create_product(
+    Extension(pool): Extension<Pool<sqlx::Sqlite>>,
+    Json(product): Json<NewProduct>,
+) -> Result<(StatusCode, String), (StatusCode, String)> {
+        sqlx::query("INSERT INTO products (title, price, image_url, brandname, quantity) VALUES (?, ?, ?, ?, ?)")
+        .bind(&product.title)
+        .bind(&product.price)
+        .bind(&product.image_url)
+        .bind(&product.brandname)
+        .bind(&product.quantity)
+        .execute(&pool)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Error creating product: {}", e)))?;
+
+    Ok((StatusCode::CREATED, "Product successfully created".to_string()))
+}
+
+
 pub async fn get_products(
     Extension(pool): Extension<Pool<sqlx::Sqlite>>) -> Json<Vec<Product>> {
-    let products = sqlx::query_as::<_, Product>("SELECT id, title, price, image_url, brandname FROM products")
+    let products = sqlx::query_as::<_, Product>("SELECT id, title, price, image_url, brandname, quantity FROM products")
     .fetch_all(&pool)
     .await
     .expect("Failed to fetch products");

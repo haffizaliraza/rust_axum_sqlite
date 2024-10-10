@@ -42,6 +42,7 @@ async fn main() {
         .route("/api/products", get(api::get_products))
         .route("/api/products/:id", get(api::get_product))
         .route("/api/products/:id", delete(api::delete_product))
+        .route("/api/products", post(api::create_product))
         .layer(axum::middleware::from_fn(middleware::validate_jwt));
 
     let app = public_routes
