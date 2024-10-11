@@ -3,12 +3,12 @@
 
 
 use axum::{
-    extract::{Extension, Path},
+    extract::{Query, Extension, Path},
     http::StatusCode,
     Json,
 };
 use sqlx::{Pool, Sqlite};
-use crate::models::{Item, NewItem, UpdateItem, Product, SignupInput, User, JwtResponse, LoginInput, Claims, NewProduct};
+use crate::models::{Item, NewItem, UpdateItem, Product, SignupInput, User, JwtResponse, LoginInput, Claims, NewProduct, PaginatedResponse, Pagination};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use jsonwebtoken::{encode, Header, EncodingKey};
@@ -88,15 +88,39 @@ pub async fn create_product(
     Ok((StatusCode::CREATED, "Product successfully created".to_string()))
 }
 
-
 pub async fn get_products(
-    Extension(pool): Extension<Pool<sqlx::Sqlite>>) -> Json<Vec<Product>> {
-    let products = sqlx::query_as::<_, Product>("SELECT id, title, price, image_url, brandname, quantity FROM products")
+    Query(pagination): Query<Pagination>,
+    Extension(pool): Extension<Pool<sqlx::Sqlite>>,
+) -> Result<Json<PaginatedResponse<Product>>, (StatusCode, String)> {
+    let page: u32 = pagination.page.unwrap_or(1);
+    let page_size: u32 = pagination.page_size.unwrap_or(10);
+
+    let offset: u32 = (page - 1) * page_size;
+
+    let products = sqlx::query_as::<_, Product>(
+        "SELECT id, title, price, image_url, brandname, quantity 
+         FROM products 
+         LIMIT ? OFFSET ?",
+    )
+    .bind(page_size)
+    .bind(offset)
     .fetch_all(&pool)
     .await
-    .expect("Failed to fetch products");
-    
-    Json(products)
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to fetch products: {}", e)))?;
+
+    let total_count: i64 = sqlx::query_scalar("SELECT COUNT(id) FROM products")
+        .fetch_one(&pool)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to fetch product count: {}", e)))?;
+
+    let response = PaginatedResponse {
+        data: products,
+        page: Some(page),
+        page_size: Some(page_size),
+        total_count: Some(total_count as u32),
+    };
+
+    Ok(Json(response))
 }
 
 pub async fn delete_product(

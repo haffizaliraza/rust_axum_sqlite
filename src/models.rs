@@ -69,8 +69,17 @@ pub struct JwtResponse {
     pub token: String,
 }
 
-// #[derive(Deserialize)]
-// struct Pagination {
-//     page: Option<u32>,
-//     page_size: Option<u32>,
-// }
+#[derive(Deserialize)]
+pub struct Pagination {
+    pub page: Option<u32>,
+    pub page_size: Option<u32>,
+}
+
+#[derive(Deserialize, Serialize)]
+pub struct PaginatedResponse<T> {
+    pub data: Vec<T>,
+    pub page: Option<u32>,
+    pub page_size: Option<u32>,
+    pub total_count: Option<u32>,
+}
+
