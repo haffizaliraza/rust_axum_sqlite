@@ -68,3 +68,9 @@ pub struct LoginInput {
 pub struct JwtResponse {
     pub token: String,
 }
+
+// #[derive(Deserialize)]
+// struct Pagination {
+//     page: Option<u32>,
+//     page_size: Option<u32>,
+// }
